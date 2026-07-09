@@ -1,0 +1,46 @@
+modLoader = "javafml"
+loaderVersion = "[47,)"
+license = "${mod_license}"
+issueTrackerURL="https://github.com/Omicron-Industries/PhoenixDomains/issues" #optional
+
+[[mods]]
+    modId = "${mod_id}"
+    version = "${version}"
+    displayName = "${mod_name}"
+    mixinConfigs = "phoenix_domains.mixins.json"
+    displayURL = "${mod_url}"
+    authors="${mod_author}"
+    description = '''
+Phoenix Domains — chunk claiming and land protection for guilds and solo players, built on Phoenix Guilds.
+'''
+
+    [[dependencies.${mod_id}]]
+        modId = "forge"
+        mandatory = true
+        versionRange = "[${forge_version},)"
+        ordering = "NONE"
+        side = "BOTH"
+    [[dependencies.${mod_id}]]
+        modId = "minecraft"
+        mandatory = true
+        versionRange = "[${minecraft_version},)"
+        ordering = "NONE"
+        side = "BOTH"
+    [[dependencies.${mod_id}]]
+        modId = "phoenix_guilds"
+        mandatory = true
+        versionRange = "[0.1.0,)"
+        ordering = "AFTER"
+        side = "BOTH"
+    [[dependencies.${mod_id}]]
+        modId = "phoenix_chronicles"
+        mandatory = false
+        versionRange = "[0.1.0,)"
+        ordering = "AFTER"
+        side = "BOTH"
+    [[dependencies.${mod_id}]]
+        modId = "phoenix_solaris"
+        mandatory = false
+        versionRange = "[0.1.0,)"
+        ordering = "AFTER"
+        side = "CLIENT"
