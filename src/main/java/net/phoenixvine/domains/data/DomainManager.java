@@ -88,6 +88,16 @@ public class DomainManager extends SavedData {
         return claims.size();
     }
 
+    /** How many of {@code token}'s claimed chunks currently have chunkloading turned on. */
+    public int getChunkloadedCountForOwner(UUID token) {
+        int count = 0;
+        for (ChunkKey key : getClaimsForOwner(token)) {
+            Claim claim = claims.get(key);
+            if (claim != null && claim.isChunkloaded()) count++;
+        }
+        return count;
+    }
+
     // ── Claim mutation ───────────────────────────────────────────────────────
 
     /** Claims the chunk for the given owner token. Returns false if already claimed. */

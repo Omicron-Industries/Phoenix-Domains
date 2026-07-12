@@ -8,6 +8,8 @@
   "domains.result.no_chunkload_power": "Not enough chunkload power.",
   "domains.result.dimension_not_loaded": "That dimension isn't loaded.",
   "domains.result.too_far": "You're too far from that chunk to claim it.",
+  "domains.result.too_many_claims": "You've reached your claimed chunk limit.",
+  "domains.result.too_many_forceloaded": "You've reached your forceloaded chunk limit.",
   "domains.protection.blocked": "You can't do that here — this land belongs to %s",
   "domains.hud.wilderness": "Wilderness",
   "domains.hud.owner": "%s's land",
@@ -22,6 +24,8 @@
   "domains.map.hint_unclaim": "Right-click: unclaim your chunk (hold + drag to mass-unclaim)",
   "domains.map.hint_chunkload": "Shift+Left-click: claim + chunkload    Shift+Right-click: remove chunkload",
   "domains.map.hint_pan_middle": "Middle-click drag: pan    Scroll: zoom",
+  "domains.map.not_available": "The claim map isn't available right now.",
+  "domains.map.view_only": "You can only view the claim map here, not manage it.",
   "key.phoenix_domains.map": "Open Claim Map",
   "key.phoenix_domains.toggle_hud": "Toggle Owner HUD",
   "key.categories.phoenix_domains": "Phoenix Domains"

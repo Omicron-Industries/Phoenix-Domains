@@ -69,6 +69,7 @@ public class SolarisClaimMapScreen extends Screen {
     private int frameW;
     private int frameH;
     private ChunkKey centerKey;
+    private boolean notifiedViewOnly = false;
 
     public SolarisClaimMapScreen() {
         super(Component.translatable("domains.map.title"));
@@ -267,6 +268,26 @@ public class SolarisClaimMapScreen extends Screen {
         return y + 2;
     }
 
+    /**
+     * {@code VISIBLE}-only access refuses claim/unclaim/chunkload clicks here, client-side —
+     * this screen only ever opens at all once {@code DomainsSolarisIntegration.FEATURE_CLAIM_MAP}
+     * is at least {@code VISIBLE} (see {@code DomainHudOverlay}'s keybind gate), so reaching this
+     * screen and NOT being at {@code ENABLED} specifically means view-only.
+     */
+    private boolean canManage() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null) return true;
+        boolean enabled = DomainsSolarisIntegration.claimMapState(mc.level.dimension().location())
+                .atLeast(net.phoenixvine.solaris.api.SolarisFeatureState.ENABLED);
+        if (!enabled && !notifiedViewOnly) {
+            notifiedViewOnly = true;
+            if (mc.player != null) {
+                mc.player.displayClientMessage(Component.translatable("domains.map.view_only"), true);
+            }
+        }
+        return enabled;
+    }
+
     private boolean isMine(S2CDomainSyncPacket.ClaimEntry entry) {
         Minecraft mc = Minecraft.getInstance();
         return mc.player != null && entry.ownerName().equals(mc.player.getName().getString());
@@ -278,6 +299,7 @@ public class SolarisClaimMapScreen extends Screen {
      * and dragging across many chunks claims each one once, not every frame.
      */
     private void performClaimAction(double mx, double my, boolean shift) {
+        if (!canManage()) return;
         int[] hovered = chunkAt(mx, my);
         if (hovered == null || (hovered[0] == lastActionChunkX && hovered[1] == lastActionChunkZ)) return;
         lastActionChunkX = hovered[0];
@@ -303,6 +325,7 @@ public class SolarisClaimMapScreen extends Screen {
      * once-per-chunk-per-drag guard as {@link #performClaimAction}.
      */
     private void performUnclaimAction(double mx, double my, boolean shift) {
+        if (!canManage()) return;
         int[] hovered = chunkAt(mx, my);
         if (hovered == null || (hovered[0] == lastActionChunkX && hovered[1] == lastActionChunkZ)) return;
         lastActionChunkX = hovered[0];

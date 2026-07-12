@@ -56,11 +56,27 @@ public class DomainCommands {
                                         StringArgumentType.getString(ctx, "guildName"),
                                         LongArgumentType.getLong(ctx, "amount"), false))));
 
+        var adminClaim = Commands.argument("target", EntityArgument.player())
+                .then(Commands.argument("owner", EntityArgument.player())
+                        .executes(ctx -> adminClaim(ctx.getSource(), EntityArgument.getPlayer(ctx, "target"),
+                                EntityArgument.getPlayer(ctx, "owner"))));
+
+        var adminUnclaim = Commands.argument("target", EntityArgument.player())
+                .executes(ctx -> adminUnclaim(ctx.getSource(), EntityArgument.getPlayer(ctx, "target")));
+
+        var adminChunkload = Commands.argument("target", EntityArgument.player())
+                .then(Commands.argument("value", BoolArgumentType.bool())
+                        .executes(ctx -> adminChunkload(ctx.getSource(), EntityArgument.getPlayer(ctx, "target"),
+                                BoolArgumentType.getBool(ctx, "value"))));
+
         var admin = Commands.literal("admin")
                 .requires(src -> src.hasPermission(2))
                 .then(Commands.literal("grant")
                         .then(grantPlayer)
-                        .then(Commands.literal("guild").then(grantGuild)));
+                        .then(Commands.literal("guild").then(grantGuild)))
+                .then(Commands.literal("claim").then(adminClaim))
+                .then(Commands.literal("unclaim").then(adminUnclaim))
+                .then(Commands.literal("chunkload").then(adminChunkload));
 
         var flagNode = Commands.literal("flag")
                 .then(Commands.argument("flag", StringArgumentType.word())
@@ -166,6 +182,35 @@ public class DomainCommands {
         source.sendSuccess(
                 () -> Component.literal(
                         "§aGranted §f" + amount + " §a" + kind + " to §f" + DomainOwnership.displayName(token) + "§a."),
+                true);
+        return 1;
+    }
+
+    /** Force-claims {@code target}'s current chunk for {@code owner}'s token, bypassing all normal checks. */
+    private static int adminClaim(CommandSourceStack source, ServerPlayer target, ServerPlayer owner) {
+        UUID token = DomainOwnership.tokenFor(owner.getUUID());
+        DomainAPI.adminSetClaim(source.getServer(), currentChunk(target), token);
+        source.sendSuccess(() -> Component.literal(
+                "§aForce-claimed §f" + target.getGameProfile().getName() + "'s §achunk for §f" +
+                        DomainOwnership.displayName(token) + "§a."),
+                true);
+        return 1;
+    }
+
+    /** Force-unclaims {@code target}'s current chunk, bypassing owner/permission checks. */
+    private static int adminUnclaim(CommandSourceStack source, ServerPlayer target) {
+        DomainAPI.adminRemoveClaim(source.getServer(), currentChunk(target));
+        source.sendSuccess(() -> Component.literal(
+                "§aForce-unclaimed §f" + target.getGameProfile().getName() + "'s §achunk."), true);
+        return 1;
+    }
+
+    /** Force-sets chunkload state on {@code target}'s current chunk, bypassing power/permission checks. */
+    private static int adminChunkload(CommandSourceStack source, ServerPlayer target, boolean value) {
+        DomainAPI.adminSetChunkloaded(source.getServer(), currentChunk(target), value);
+        source.sendSuccess(() -> Component.literal(
+                "§aForce-set chunkload on §f" + target.getGameProfile().getName() + "'s §achunk to §f" + value +
+                        "§a."),
                 true);
         return 1;
     }

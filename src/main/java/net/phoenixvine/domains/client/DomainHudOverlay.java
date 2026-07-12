@@ -18,6 +18,7 @@ import net.phoenixvine.domains.integration.solaris.DomainsSolarisIntegration;
 import net.phoenixvine.domains.network.C2SDomainActionPacket;
 import net.phoenixvine.domains.network.DomainNetwork;
 import net.phoenixvine.domains.network.S2CDomainSyncPacket;
+import net.phoenixvine.solaris.api.SolarisFeatureState;
 
 /**
  * Rough v1 HUD: a single centered top-of-screen line naming whoever owns the chunk
@@ -71,6 +72,26 @@ public class DomainHudOverlay {
 
         while (DomainKeybinds.OPEN_MAP.consumeClick()) {
             if (mc.screen == null) {
+                if (solarisAvailable) {
+                    boolean visible;
+                    try {
+                        visible = DomainsSolarisIntegration.claimMapState(mc.level.dimension().location())
+                                .atLeast(SolarisFeatureState.VISIBLE);
+                    } catch (Throwable t) {
+                        solarisBroken = true;
+                        PhoenixDomains.LOGGER.error(
+                                "Failed to open the Solaris-backed claim map — falling back to Domains'" +
+                                        " vanilla-only claim map.",
+                                t);
+                        visible = true;
+                    }
+                    if (!visible) {
+                        mc.player.displayClientMessage(
+                                Component.translatable("domains.map.not_available"), true);
+                        continue;
+                    }
+                }
+
                 Screen mapScreen = null;
                 if (solarisAvailable) {
                     try {

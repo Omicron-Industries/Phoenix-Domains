@@ -1,7 +1,9 @@
 package net.phoenixvine.domains.integration.solaris;
 
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.ModList;
+import net.phoenixvine.solaris.api.SolarisFeatureState;
 
 /**
  * Optional integration with Solaris. {@code phoenix_solaris} is declared as a
@@ -21,6 +23,15 @@ import net.minecraftforge.fml.ModList;
 public final class DomainsSolarisIntegration {
 
     public static final String SOLARIS_MOD_ID = "phoenix_solaris";
+
+    /**
+     * Feature id this mod registers under Solaris's generic per-player/team tri-state system
+     * ({@code SolarisFeatureState}) — {@code DISABLED} hides the claim-map keybind's screen
+     * entirely, {@code VISIBLE} allows browsing but refuses claim/unclaim/chunkload clicks
+     * client-side, {@code ENABLED} allows full management. Rides entirely on Solaris's own
+     * team-shared persistence/sync; Domains stores no state of its own for this.
+     */
+    public static final String FEATURE_CLAIM_MAP = "domains_claim_map";
 
     private static boolean registered = false;
 
@@ -45,5 +56,10 @@ public final class DomainsSolarisIntegration {
     /** Call only after {@link #isAvailable()} has returned true. */
     public static Screen openClaimMapScreen() {
         return new SolarisClaimMapScreen();
+    }
+
+    /** Call only after {@link #isAvailable()} has returned true. */
+    public static SolarisFeatureState claimMapState(ResourceLocation dimension) {
+        return net.phoenixvine.solaris.api.SolarisAPI.getFeatureState(FEATURE_CLAIM_MAP, dimension);
     }
 }

@@ -78,6 +78,10 @@ public final class DomainAPI {
         }
 
         UUID token = DomainOwnership.tokenFor(player.getUUID());
+
+        int maxClaimed = DomainsConfig.MAX_CLAIMED_CHUNKS_PER_OWNER.get();
+        if (maxClaimed > 0 && manager.getClaimsForOwner(token).size() >= maxClaimed) return "too_many_claims";
+
         ClaimPower power = manager.getOrCreatePower(token);
         if (power.getAvailableClaimBlocks(DomainsConfig.CLAIM_POWER_BASE.get()) <= 0) return "no_power";
 
@@ -109,6 +113,11 @@ public final class DomainAPI {
         if (claim.isChunkloaded() == chunkloaded) return "no_change";
 
         if (chunkloaded) {
+            int maxForceloaded = DomainsConfig.MAX_FORCELOADED_CHUNKS_PER_OWNER.get();
+            if (maxForceloaded > 0 && manager.getChunkloadedCountForOwner(claim.getOwner()) >= maxForceloaded) {
+                return "too_many_forceloaded";
+            }
+
             ClaimPower power = manager.getOrCreatePower(claim.getOwner());
             if (power.getAvailableChunkloadBlocks(DomainsConfig.CHUNKLOAD_POWER_BASE.get()) <= 0) {
                 return "no_chunkload_power";
@@ -153,6 +162,46 @@ public final class DomainAPI {
         DomainManager manager = manager(server);
         manager.getOrCreatePower(token).grantChunkloadPower(amount);
         manager.setDirty();
+    }
+
+    /**
+     * Force-claims a chunk for {@code owner}, bypassing distance/power/permission checks entirely
+     * — the direct-chunk-state equivalent of {@link #grantClaimPower}/{@link #grantChunkloadPower}
+     * (those only touch the power pool, not chunk state directly). Unclaims any existing owner
+     * first. No-op if the server isn't running.
+     */
+    public static void adminSetClaim(MinecraftServer server, ChunkKey key, UUID owner) {
+        if (server == null || owner == null) return;
+        DomainManager manager = manager(server);
+        if (manager.isClaimed(key)) manager.unclaim(key);
+        manager.claim(key, owner);
+    }
+
+    /** Force-unclaims a chunk regardless of owner/permission. Also turns off chunkloading if it was on. */
+    public static void adminRemoveClaim(MinecraftServer server, ChunkKey key) {
+        if (server == null) return;
+        DomainManager manager = manager(server);
+        Optional<Claim> claimOpt = manager.getClaim(key);
+        if (claimOpt.isEmpty()) return;
+        if (claimOpt.get().isChunkloaded()) {
+            ServerLevel level = levelFor(server, key.dimension());
+            if (level != null) ClaimChunkLoader.setChunkForced(level, key, false);
+        }
+        manager.unclaim(key);
+    }
+
+    /**
+     * Force-sets chunkload state on an already-claimed chunk, bypassing power/permission checks. No-op if unclaimed.
+     */
+    public static void adminSetChunkloaded(MinecraftServer server, ChunkKey key, boolean chunkloaded) {
+        if (server == null) return;
+        DomainManager manager = manager(server);
+        if (manager.getClaim(key).isEmpty()) return;
+        ServerLevel level = levelFor(server, key.dimension());
+        if (level == null) return;
+
+        manager.setChunkloaded(key, chunkloaded);
+        ClaimChunkLoader.setChunkForced(level, key, chunkloaded);
     }
 
     // ── Internal ──────────────────────────────────────────────────────────────
